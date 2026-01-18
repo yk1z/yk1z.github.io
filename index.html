@@ -92,7 +92,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useMemo, useRef, useEffect } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { Search, Users, Filter, Upload, BarChart3, Heart, MapPin, Calendar, Hash, X, ChevronRight, Layers, Flag, CheckCircle2, ChevronDown, Check, Cake, Trophy, FileText, Clock, ArrowUpCircle, LogOut, GraduationCap, Copy, Moon, Sun, List, UserSquare2, Sparkles, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+        import { Search, Users, Filter, Upload, BarChart3, Heart, MapPin, Calendar, Hash, X, ChevronRight, Layers, Flag, CheckCircle2, ChevronDown, Check, Cake, Trophy, FileText, Clock, ArrowUpCircle, LogOut, GraduationCap, Copy, Moon, Sun, List, UserSquare2, Sparkles, TrendingUp, TrendingDown, Minus, Music } from 'lucide-react';
 
         const DEMO_DATA = [];
 
@@ -102,6 +102,7 @@
             "BEJ48": "bg-pink-100 text-pink-600 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800",
             "CKG48": "bg-orange-100 text-orange-600 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
             "CGT48": "bg-red-100 text-red-600 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
+            "SHY48": "bg-purple-100 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800", 
             "IDFT": "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
             "明星殿堂": "bg-purple-100 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
             "官方": "bg-gray-200 text-gray-700 border-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600",
@@ -185,6 +186,49 @@
             return dateStr;
         };
 
+        const StageCard = ({ data, index }) => {
+            // Even index (0, 2...) is on Left in desktop reverse row logic (which puts it visually on left).
+            // Odd index (1, 3...) is on Right.
+            // Requirement: Left card text should be right-aligned. Right card text left-aligned.
+            const isLeftCard = index % 2 === 0;
+
+            return (
+                <div className={`rounded-xl border border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between h-full text-left ${isLeftCard ? 'md:text-right' : 'md:text-left'}`}>
+                    <div>
+                        <div className={`flex items-start mb-2 ${isLeftCard ? 'md:flex-row-reverse justify-between' : 'justify-between'}`}>
+                            {/* On mobile (default), justify-between keeps them apart. On desktop right-align (flex-row-reverse), they swap sides. */}
+                             <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${getTeamStyle(data.队伍)}`}>
+                                {data.队伍}
+                            </span>
+                            <span className={`text-xs font-mono text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 rounded border ${getGroupStyle(data.分团)}`}>
+                                {data.分团}
+                            </span>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-pink-500 transition-colors">
+                            {data.名称}
+                        </h3>
+                        
+                        <div className="space-y-2 mt-4">
+                            <div className={`flex items-start text-xs text-gray-600 dark:text-gray-400 ${isLeftCard ? 'md:flex-row-reverse' : ''}`}>
+                                <Calendar className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-gray-400 mr-2 ${isLeftCard ? 'md:ml-2 md:mr-0' : ''}`} />
+                                <span className="break-words">{data.日期}</span>
+                            </div>
+                            <div className={`flex items-center text-xs text-gray-600 dark:text-gray-400 ${isLeftCard ? 'md:flex-row-reverse' : ''}`}>
+                                <List className={`w-3.5 h-3.5 flex-shrink-0 text-gray-400 mr-2 ${isLeftCard ? 'md:ml-2 md:mr-0' : ''}`} />
+                                <span>{data.场次}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {data.备注 && (
+                        <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500 italic">
+                            {data.备注}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         const ElectionCard = ({ data, index, showEdition }) => {
             let rankColor = "text-gray-500 dark:text-gray-400";
             let bgColor = "bg-white dark:bg-gray-800";
@@ -213,24 +257,18 @@
                 borderColor = "border-blue-100 dark:border-blue-900";
             }
 
-            // Rank Trend Logic
             const getRankTrend = (trend) => {
                 if (!trend || trend === '-') return null;
                 let trendStr = trend.toString();
-                // Clean the string: remove arrows and symbols to check if it's a valid movement
                 const cleanTrendStr = trendStr.replace(/[^\d.新人-]/g, "").trim();
                 
-                // Red for Rise (Up / ▲)
                 if (trendStr.includes('↑') || trendStr.includes('+') || trendStr.includes('上升') || trendStr.includes('▲')) {
-                    // Extract just the number/text if needed, but for now display full trend string
                     return <div className="flex items-center text-red-500 dark:text-red-400 font-bold text-xs"><TrendingUp className="w-3 h-3 mr-0.5" />{cleanTrendStr || trendStr}</div>;
                 }
-                // Green for Fall (Down / ▼)
                 if (trendStr.includes('↓') || trendStr.includes('-') || trendStr.includes('下降') || trendStr.includes('▼')) {
                     return <div className="flex items-center text-green-500 dark:text-green-400 font-bold text-xs"><TrendingDown className="w-3 h-3 mr-0.5" />{cleanTrendStr || trendStr}</div>;
                 }
                 
-                // Neutral
                 if (trendStr.trim() !== "") {
                      return <div className="flex items-center text-gray-400 text-xs">{trendStr}</div>;
                 }
@@ -285,7 +323,6 @@
                 return () => document.removeEventListener('mousedown', handleClickOutside);
             }, []);
 
-            // Fix: Handle empty options array to prevent crash
             const selectedOption = options.find(opt => opt.value === value) || options[0] || { label: '加载中...', value: '' };
 
             return (
@@ -451,6 +488,7 @@
         function App() {
             const [members, setMembers] = useState(DEMO_DATA);
             const [zxData, setZxData] = useState([]); 
+            const [stagesData, setStagesData] = useState([]);
             const [searchTerm, setSearchTerm] = useState('');
             const [selectedGroup, setSelectedGroup] = useState('ALL');
             
@@ -463,6 +501,11 @@
             const [activeTab, setActiveTab] = useState('members');
             const [selectedEdition, setSelectedEdition] = useState('12');
             const [electionSearch, setElectionSearch] = useState('');
+
+            // Stage States
+            const [stageSearch, setStageSearch] = useState('');
+            const [stageGroupFilter, setStageGroupFilter] = useState('ALL');
+            const [stageTeamFilter, setStageTeamFilter] = useState('ALL');
 
             const [isDarkMode, setIsDarkMode] = useState(() => {
                 if (typeof window !== 'undefined') {
@@ -506,7 +549,6 @@
                     .then(data => {
                         if (Array.isArray(data)) {
                             setZxData(data);
-                            // Auto-select latest edition
                             const uniqueEditions = [...new Set(data.map(item => item.届数))];
                              if (uniqueEditions.length > 0) {
                                 uniqueEditions.sort((a, b) => parseInt(b) - parseInt(a));
@@ -516,6 +558,31 @@
                     })
                     .catch(err => console.error("Failed to fetch election data:", err));
             }, []);
+
+            useEffect(() => {
+                fetch('https://yk1z.github.io/stages.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            setStagesData(data);
+                        }
+                    })
+                    .catch(err => console.error("Failed to fetch stages data:", err));
+            }, []);
+
+            // Helper to parse dates from stage data strings like "2013年8月30日－12月15日"
+            const parseStageDate = (dateStr) => {
+                if (!dateStr) return 0;
+                // Try to match YYYY年M月D日 or YYYY.M.D or YYYY/M/D
+                const match = dateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+                if (match) {
+                    const year = parseInt(match[1]);
+                    const month = parseInt(match[2]) - 1; // 0-indexed months
+                    const day = parseInt(match[3]);
+                    return new Date(year, month, day).getTime();
+                }
+                return 0;
+            };
 
             const groupOptions = useMemo(() => {
                 const uniqueGroups = [...new Set(members.map(m => m.groupName).filter(Boolean))];
@@ -536,6 +603,21 @@
                 uniqueEditions.sort((a, b) => parseInt(b) - parseInt(a));
                 return uniqueEditions.map(e => ({ value: e, label: `${e}选` }));
             }, [zxData]);
+
+            // Stage Filters Options
+            const stageGroupOptions = useMemo(() => {
+                const uniqueGroups = [...new Set(stagesData.map(s => s.分团).filter(Boolean))];
+                return [{ value: 'ALL', label: '所有分团' }, ...uniqueGroups.map(g => ({ value: g, label: g }))];
+            }, [stagesData]);
+
+            const stageTeamOptions = useMemo(() => {
+                let filteredStages = stagesData;
+                if (stageGroupFilter !== 'ALL') {
+                    filteredStages = stagesData.filter(s => s.分团 === stageGroupFilter);
+                }
+                const uniqueTeams = [...new Set(filteredStages.map(s => s.队伍).filter(Boolean))];
+                return [{ value: 'ALL', label: '所有队伍' }, ...uniqueTeams.map(t => ({ value: t, label: t }))];
+            }, [stagesData, stageGroupFilter]);
 
             const stats = useMemo(() => {
                 const total = members.length;
@@ -660,6 +742,21 @@
                 return { regularElectionData: regular, newcomerElectionData: newcomer, electionName: name, isSearchResult: isSearch };
             }, [zxData, selectedEdition, electionSearch]);
 
+            // Stages filtering logic
+            const filteredStages = useMemo(() => {
+                const filtered = stagesData.filter(stage => {
+                    const matchesSearch = stage.名称?.toLowerCase().includes(stageSearch.toLowerCase());
+                    const matchesGroup = stageGroupFilter === 'ALL' || stage.分团 === stageGroupFilter;
+                    const matchesTeam = stageTeamFilter === 'ALL' || stage.队伍 === stageTeamFilter;
+                    return matchesSearch && matchesGroup && matchesTeam;
+                });
+                
+                // Sort by date ascending (oldest first)
+                return filtered.sort((a, b) => {
+                    return parseStageDate(a.日期) - parseStageDate(b.日期);
+                });
+            }, [stagesData, stageSearch, stageGroupFilter, stageTeamFilter]);
+
             return (
                 <div className="min-h-screen bg-gray-50 font-sans text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100 flex flex-col">
                     <header className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm transition-colors duration-300 dark:bg-gray-900 dark:border-gray-800">
@@ -701,6 +798,19 @@
                                     <div className="flex items-center gap-2">
                                         <Trophy className="w-4 h-4" />
                                         总选记录
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('stages')}
+                                    className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                                        activeTab === 'stages'
+                                            ? 'border-pink-500 text-pink-600 dark:text-pink-400'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Music className="w-4 h-4" />
+                                        公演数据
                                     </div>
                                 </button>
                             </div>
@@ -850,6 +960,64 @@
                                             <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-4 dark:text-gray-600" />
                                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-200">无相关数据</h3>
                                             <p className="text-gray-500 mt-1 dark:text-gray-400">请尝试切换届数或搜索其他关键词</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'stages' && (
+                            <div className="animate-fadeIn">
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 space-y-4 transition-colors duration-300 dark:bg-gray-900 dark:border-gray-800">
+                                    <div className="flex flex-col lg:flex-row gap-4">
+                                        <div className="flex-1 relative group">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                                                <Search className="h-5 w-5 text-gray-400 group-focus-within:text-pink-500 transition-colors duration-300 dark:text-gray-500" />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder="搜索公演名称..."
+                                                className="w-full pl-10 pr-4 py-3 bg-gray-100 border-transparent text-gray-900 rounded-full focus:bg-white focus:ring-2 focus:ring-pink-300 focus:border-transparent focus:shadow-md outline-none transition-all duration-300 ease-in-out placeholder-gray-500 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:bg-gray-750 dark:focus:ring-pink-500"
+                                                value={stageSearch}
+                                                onChange={(e) => setStageSearch(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                            <CustomSelect 
+                                                options={stageGroupOptions} 
+                                                value={stageGroupFilter} 
+                                                onChange={(val) => {
+                                                    setStageGroupFilter(val);
+                                                    setStageTeamFilter('ALL');
+                                                }} 
+                                            />
+                                            <CustomSelect 
+                                                options={stageTeamOptions} 
+                                                value={stageTeamFilter} 
+                                                onChange={setStageTeamFilter} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="relative">
+                                    <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-800 -ml-px"></div>
+
+                                    {filteredStages.length > 0 ? (
+                                        filteredStages.map((stage, index) => (
+                                            <div key={index} className={`mb-8 flex items-center w-full ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                                                <div className="hidden md:block md:w-1/2"></div>
+                                                <div className="absolute left-4 md:left-1/2 w-4 h-4 bg-white dark:bg-gray-900 border-2 border-pink-500 rounded-full z-10 -ml-2 shadow-sm"></div>
+                                                <div className={`w-full md:w-1/2 pl-12 md:pl-0 ${index % 2 === 0 ? 'md:pr-12' : 'md:pl-12'}`}>
+                                                    <StageCard data={stage} index={index} />
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="col-span-full text-center py-20 bg-white rounded-xl border border-dashed border-gray-300 dark:bg-gray-800 dark:border-gray-700 relative z-20 ml-10 md:ml-0">
+                                            <Music className="w-12 h-12 text-gray-300 mx-auto mb-4 dark:text-gray-600" />
+                                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-200">无相关公演</h3>
+                                            <p className="text-gray-500 mt-1 dark:text-gray-400">请尝试调整筛选条件</p>
                                         </div>
                                     )}
                                 </div>

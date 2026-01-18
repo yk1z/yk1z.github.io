@@ -761,7 +761,7 @@
       "teamId": 1001,
       "groupName": "SNH48",
       "periodName": "SNH48 四期生",
-      "pinyin": "YanMingYun",
+      "pinyin": "YanMingJun",
       "liveRoomId": 3868295,
       "isInGroup": true
     },
@@ -10688,4 +10688,5 @@
       "isInGroup": false
     }
   ]
+
 }

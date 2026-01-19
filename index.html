@@ -92,7 +92,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useMemo, useRef, useEffect } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { Search, Users, Filter, Upload, BarChart3, Heart, MapPin, Calendar, Hash, X, ChevronRight, Layers, Flag, CheckCircle2, ChevronDown, Check, Cake, Trophy, FileText, Clock, ArrowUpCircle, LogOut, GraduationCap, Copy, Moon, Sun, List, UserSquare2, Sparkles, TrendingUp, TrendingDown, Minus, Music, Disc, AlertCircle, Mic2, Loader2, ExternalLink } from 'lucide-react';
+        import { Search, Users, Filter, Upload, BarChart3, Heart, MapPin, Calendar, Hash, X, ChevronRight, Layers, Flag, CheckCircle2, ChevronDown, Check, Cake, Trophy, FileText, Clock, ArrowUpCircle, LogOut, GraduationCap, Copy, Moon, Sun, List, UserSquare2, Sparkles, TrendingUp, TrendingDown, Minus, Music, Disc, AlertCircle, Mic2, Loader2, ExternalLink, ClipboardCopy } from 'lucide-react';
 
         const DEMO_DATA = [];
 
@@ -113,8 +113,6 @@
             "CGT48": "bg-red-100 text-red-600 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
             "SHY48": "bg-purple-100 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800", 
             "7SENSES": "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700",
-            "DEMOON": "bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200 dark:bg-fuchsia-900/30 dark:text-fuchsia-300 dark:border-fuchsia-800",
-            "BLUEV": "bg-cyan-100 text-cyan-600 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-800",
             "IDFT": "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
             "明星殿堂": "bg-purple-100 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
             "官方": "bg-gray-200 text-gray-700 border-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600",
@@ -219,7 +217,7 @@
             const isLeftCard = index % 2 === 0;
 
             return (
-                <div className={`rounded-xl border border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow duration-300 group flex flex-col justify-between h-full text-left ${isLeftCard ? 'md:text-right' : 'md:text-left'}`}>
+                <div className={`rounded-xl border border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between h-full text-left ${isLeftCard ? 'md:text-right' : 'md:text-left'}`}>
                     <div>
                         <div className={`flex items-start mb-2 ${isLeftCard ? 'md:flex-row-reverse justify-between' : 'justify-between'}`}>
                              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${getTeamStyle(data.队伍)}`}>
@@ -266,7 +264,7 @@
                     <div className="p-5 border-b border-black/5 dark:border-white/5 flex items-start justify-between">
                         <div className="flex-1">
                              <div className="flex items-center gap-2 mb-2">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded border border-black/10 dark:border-white/10 bg-white/50 dark:bg-black/20 text-gray-700 dark:text-gray-300 font-bold ${getGroupStyle(album.分团)}`}>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded border border-black/10 dark:border-white/10 bg-white/50 dark:bg-black/20 text-gray-700 dark:text-gray-300 font-bold">
                                     {album.分团}
                                 </span>
                                 <span className="text-[10px] px-1.5 py-0.5 rounded border border-black/10 dark:border-white/10 bg-white/30 dark:bg-black/10 text-gray-600 dark:text-gray-400">
@@ -278,13 +276,17 @@
                             </h3>
                             <div className="flex items-center text-xs text-gray-600 dark:text-gray-400 mt-1">
                                 <Calendar className="w-3.5 h-3.5 mr-1" />
-                                {album.发行日期}
+                                {album.hasMultipleDates ? (
+                                    <span>多种日期 / 见详情</span>
+                                ) : (
+                                    <span>{album.发行日期}</span>
+                                )}
                             </div>
                         </div>
                         {/* Removed icon as requested */}
                     </div>
                     
-                    <div className="p-3">
+                    <div className="p-3 bg-white/50 dark:bg-black/20">
                         <div className="space-y-1">
                             {displayedSongs.map((song, idx) => (
                                 <div 
@@ -295,7 +297,13 @@
                                     <span className="text-gray-500 dark:text-gray-500 w-6 font-mono text-xs flex-shrink-0">{song.歌曲序号}</span>
                                     <div className="flex-1 min-w-0">
                                         <div className="font-medium text-gray-800 dark:text-gray-200 truncate group-hover/song:text-pink-600 dark:group-hover/song:text-pink-400 transition-colors">{song.歌曲名}</div>
-                                        {song.演唱者 && <div className="text-xs text-gray-500 dark:text-gray-500 truncate">{song.演唱者}</div>}
+                                        <div className="flex flex-wrap gap-x-2 text-xs text-gray-500 dark:text-gray-500">
+                                            {song.演唱者 && <span className="truncate max-w-[150px]">{song.演唱者}</span>}
+                                            {/* 如果专辑包含多个日期（如“其他歌曲”），显示单曲日期 */}
+                                            {album.hasMultipleDates && song.发行日期 && (
+                                                <span className="text-gray-400 dark:text-gray-600">{song.发行日期}</span>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex items-center text-gray-400 dark:text-gray-500 flex-shrink-0 group-hover/song:text-pink-500 dark:group-hover/song:text-pink-400">
                                         <span className="text-[10px] mr-1 opacity-0 group-hover/song:opacity-100 transition-opacity">查看歌词</span>
@@ -325,6 +333,7 @@
             const [loading, setLoading] = useState(true);
             const [error, setError] = useState(false);
             const [fullUrl, setFullUrl] = useState('');
+            const [copySuccess, setCopySuccess] = useState(false);
 
             useEffect(() => {
                 const fetchLyric = (url) => {
@@ -373,6 +382,7 @@
                 setLoading(true);
                 setError(false);
                 setLyrics(null);
+                setCopySuccess(false);
                 
                 // 1. 优先使用 JSON 中明确指定的 lrcPath
                 if (song.lrcPath) {
@@ -416,6 +426,24 @@
                     .filter(line => line);
             }, [lyrics]);
 
+            const handleCopyLyrics = () => {
+                if (!parsedLyrics.length) return;
+                const textToCopy = parsedLyrics.join('\n');
+                
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setCopySuccess(true);
+                    setTimeout(() => setCopySuccess(false), 2000);
+                } catch (err) {
+                    console.error('Failed to copy lyrics', err);
+                }
+                document.body.removeChild(textArea);
+            };
+
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm animate-backdrop" onClick={onClose}>
                     <div 
@@ -427,7 +455,18 @@
                                 <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{song.歌曲名}</h3>
                                 {song.演唱者 && <p className="text-xs text-gray-500 dark:text-gray-400">{song.演唱者}</p>}
                             </div>
-                            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500 dark:text-gray-400 dark:hover:bg-gray-800"><X className="w-5 h-5" /></button>
+                            <div className="flex items-center gap-2">
+                                {!loading && !error && parsedLyrics.length > 0 && (
+                                    <button 
+                                        onClick={handleCopyLyrics}
+                                        className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500 dark:text-gray-400 dark:hover:bg-gray-800 relative group"
+                                        title="复制歌词"
+                                    >
+                                        {copySuccess ? <Check className="w-5 h-5 text-green-500" /> : <ClipboardCopy className="w-5 h-5" />}
+                                    </button>
+                                )}
+                                <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500 dark:text-gray-400 dark:hover:bg-gray-800"><X className="w-5 h-5" /></button>
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar text-center">
@@ -1079,14 +1118,29 @@
                             专辑序号: item.专辑序号,
                             专辑名: item.专辑,
                             发行日期: item.发行日期,
-                            songs: []
+                            songs: [],
+                            uniqueDates: new Set([item.发行日期]) // Initialize set
                         };
+                    } else {
+                        albumGroups[key].uniqueDates.add(item.发行日期);
                     }
                     albumGroups[key].songs.push(item);
                 });
 
-                // Convert to array and sort by date ascending (oldest first)
-                return Object.values(albumGroups).sort((a, b) => {
+                const result = Object.values(albumGroups).map(group => {
+                    // Check for multiple dates
+                    const hasMultipleDates = group.uniqueDates.size > 1;
+                    return {
+                        ...group,
+                        hasMultipleDates,
+                        // If multiple dates, sort songs by date
+                        songs: hasMultipleDates 
+                            ? group.songs.sort((a, b) => parseAlbumDate(b.发行日期) - parseAlbumDate(a.发行日期))
+                            : group.songs
+                    };
+                });
+
+                return result.sort((a, b) => {
                      return parseAlbumDate(a.发行日期) - parseAlbumDate(b.发行日期);
                 });
             }, [fxzpData, albumSearch, albumGroupFilter, albumTypeFilter]);
@@ -1410,6 +1464,23 @@
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Search lyrics link if searching */}
+                                    {albumSearch && (
+                                        <div className="text-center mt-2 pb-2">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                想搜索歌词内容？
+                                                <a 
+                                                    href={`https://github.com/yk1z/SNH48-Group-Lyrics/search?q=${encodeURIComponent(albumSearch)}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-pink-500 hover:underline ml-1 inline-flex items-center"
+                                                >
+                                                    在歌词仓库中搜索 "{albumSearch}" <ExternalLink className="w-3 h-3 ml-0.5" />
+                                                </a>
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1422,6 +1493,18 @@
                                             <Disc className="w-12 h-12 text-gray-300 mx-auto mb-4 dark:text-gray-600" />
                                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-200">无相关作品</h3>
                                             <p className="text-gray-500 mt-1 dark:text-gray-400">请尝试搜索其他关键词或调整筛选</p>
+                                            
+                                            {albumSearch && (
+                                                <a 
+                                                    href={`https://github.com/yk1z/SNH48-Group-Lyrics/search?q=${encodeURIComponent(albumSearch)}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="mt-4 inline-flex items-center px-4 py-2 bg-pink-50 text-pink-600 rounded-full text-sm font-medium hover:bg-pink-100 transition-colors dark:bg-pink-900/30 dark:text-pink-300 dark:hover:bg-pink-900/50"
+                                                >
+                                                    <Search className="w-4 h-4 mr-2" />
+                                                    去歌词库搜索
+                                                </a>
+                                            )}
                                         </div>
                                     )}
                                 </div>

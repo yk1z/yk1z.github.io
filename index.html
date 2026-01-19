@@ -92,9 +92,18 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useMemo, useRef, useEffect } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { Search, Users, Filter, Upload, BarChart3, Heart, MapPin, Calendar, Hash, X, ChevronRight, Layers, Flag, CheckCircle2, ChevronDown, Check, Cake, Trophy, FileText, Clock, ArrowUpCircle, LogOut, GraduationCap, Copy, Moon, Sun, List, UserSquare2, Sparkles, TrendingUp, TrendingDown, Minus, Music } from 'lucide-react';
+        import { Search, Users, Filter, Upload, BarChart3, Heart, MapPin, Calendar, Hash, X, ChevronRight, Layers, Flag, CheckCircle2, ChevronDown, Check, Cake, Trophy, FileText, Clock, ArrowUpCircle, LogOut, GraduationCap, Copy, Moon, Sun, List, UserSquare2, Sparkles, TrendingUp, TrendingDown, Minus, Music, Disc, AlertCircle, Mic2, Loader2, ExternalLink } from 'lucide-react';
 
         const DEMO_DATA = [];
+
+        // 数据源配置
+        const DATA_URLS = {
+            members: 'https://raw.githubusercontent.com/yk1z/yk1z.github.io/refs/heads/main/members.json',
+            zx: 'https://raw.githubusercontent.com/yk1z/yk1z.github.io/refs/heads/main/zx.json',
+            stages: 'https://raw.githubusercontent.com/yk1z/yk1z.github.io/refs/heads/main/stages.json',
+            fxzp: 'https://raw.githubusercontent.com/yk1z/yk1z.github.io/refs/heads/main/fxzp.json',
+            lyrics: 'https://raw.githubusercontent.com/yk1z/SNH48-Group-Lyrics/main/' 
+        };
 
         const GROUP_COLORS = {
             "SNH48": "bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
@@ -103,11 +112,31 @@
             "CKG48": "bg-orange-100 text-orange-600 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
             "CGT48": "bg-red-100 text-red-600 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
             "SHY48": "bg-purple-100 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800", 
+            "7SENSES": "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700",
+            "DEMOON": "bg-fuchsia-100 text-fuchsia-600 border-fuchsia-200 dark:bg-fuchsia-900/30 dark:text-fuchsia-300 dark:border-fuchsia-800",
+            "BLUEV": "bg-cyan-100 text-cyan-600 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-800",
             "IDFT": "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
             "明星殿堂": "bg-purple-100 text-purple-600 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
             "官方": "bg-gray-200 text-gray-700 border-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600",
             "default": "bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
         };
+        
+        const ALBUM_CARD_STYLES = {
+            "SNH48": "bg-blue-50/80 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800/50",
+            "GNZ48": "bg-green-50/80 border-green-200 dark:bg-green-900/20 dark:border-green-800/50",
+            "BEJ48": "bg-pink-50/80 border-pink-200 dark:bg-pink-900/20 dark:border-pink-800/50",
+            "CKG48": "bg-orange-50/80 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800/50",
+            "CGT48": "bg-red-50/80 border-red-200 dark:bg-red-900/20 dark:border-red-800/50",
+            "SHY48": "bg-purple-50/80 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800/50",
+            "7SENSES": "bg-gray-100/80 border-gray-300 dark:bg-gray-800/40 dark:border-gray-600",
+            "DEMOON": "bg-fuchsia-50/80 border-fuchsia-200 dark:bg-fuchsia-900/20 dark:border-fuchsia-800/50",
+            "BLUEV": "bg-cyan-50/80 border-cyan-200 dark:bg-cyan-900/20 dark:border-cyan-800/50",
+            "IDFT": "bg-gray-50/80 border-gray-200 dark:bg-gray-800/40 dark:border-gray-700",
+            "明星殿堂": "bg-purple-50/80 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800/50",
+            "官方": "bg-gray-50/80 border-gray-200 dark:bg-gray-800/40 dark:border-gray-700",
+            "default": "bg-white border-gray-200 dark:bg-gray-900 dark:border-gray-800"
+        };
+        const getAlbumCardStyle = (group) => ALBUM_CARD_STYLES[group] || ALBUM_CARD_STYLES["default"];
 
         const TEAM_COLORS = {
             "TEAM SII": "text-[#A1D5ED] bg-[#A1D5ED]/10 border-[#A1D5ED]/30 dark:bg-[#A1D5ED]/20",
@@ -187,16 +216,12 @@
         };
 
         const StageCard = ({ data, index }) => {
-            // Even index (0, 2...) is on Left in desktop reverse row logic (which puts it visually on left).
-            // Odd index (1, 3...) is on Right.
-            // Requirement: Left card text should be right-aligned. Right card text left-aligned.
             const isLeftCard = index % 2 === 0;
 
             return (
-                <div className={`rounded-xl border border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between h-full text-left ${isLeftCard ? 'md:text-right' : 'md:text-left'}`}>
+                <div className={`rounded-xl border border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow duration-300 group flex flex-col justify-between h-full text-left ${isLeftCard ? 'md:text-right' : 'md:text-left'}`}>
                     <div>
                         <div className={`flex items-start mb-2 ${isLeftCard ? 'md:flex-row-reverse justify-between' : 'justify-between'}`}>
-                            {/* On mobile (default), justify-between keeps them apart. On desktop right-align (flex-row-reverse), they swap sides. */}
                              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${getTeamStyle(data.队伍)}`}>
                                 {data.队伍}
                             </span>
@@ -210,11 +235,11 @@
                         
                         <div className="space-y-2 mt-4">
                             <div className={`flex items-start text-xs text-gray-600 dark:text-gray-400 ${isLeftCard ? 'md:flex-row-reverse' : ''}`}>
-                                <Calendar className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-gray-400 mr-2 ${isLeftCard ? 'md:ml-2 md:mr-0' : ''}`} />
+                                <Calendar className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-gray-400 mr-2 ${isLeftCard ? 'md:ml-2 md:mr-0' : 'mr-2'}`} />
                                 <span className="break-words">{data.日期}</span>
                             </div>
                             <div className={`flex items-center text-xs text-gray-600 dark:text-gray-400 ${isLeftCard ? 'md:flex-row-reverse' : ''}`}>
-                                <List className={`w-3.5 h-3.5 flex-shrink-0 text-gray-400 mr-2 ${isLeftCard ? 'md:ml-2 md:mr-0' : ''}`} />
+                                <List className={`w-3.5 h-3.5 flex-shrink-0 text-gray-400 ${isLeftCard ? 'md:ml-2 mr-2 md:mr-0' : 'mr-2'}`} />
                                 <span>{data.场次}</span>
                             </div>
                         </div>
@@ -225,6 +250,219 @@
                             {data.备注}
                         </div>
                     )}
+                </div>
+            );
+        };
+
+        const AlbumCard = ({ album, onSongClick }) => {
+            const [isExpanded, setIsExpanded] = useState(false);
+            const displayedSongs = isExpanded ? album.songs : album.songs.slice(0, 3);
+            const hasMore = album.songs.length > 3;
+            // 获取对应分团的卡片背景样式
+            const cardStyle = getAlbumCardStyle(album.分团);
+
+            return (
+                <div className={`rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 animate-content group ${cardStyle}`}>
+                    <div className="p-5 border-b border-black/5 dark:border-white/5 flex items-start justify-between">
+                        <div className="flex-1">
+                             <div className="flex items-center gap-2 mb-2">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded border border-black/10 dark:border-white/10 bg-white/50 dark:bg-black/20 text-gray-700 dark:text-gray-300 font-bold ${getGroupStyle(album.分团)}`}>
+                                    {album.分团}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded border border-black/10 dark:border-white/10 bg-white/30 dark:bg-black/10 text-gray-600 dark:text-gray-400">
+                                    {album.类型}
+                                </span>
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors">
+                                {album.专辑名}
+                            </h3>
+                            <div className="flex items-center text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                <Calendar className="w-3.5 h-3.5 mr-1" />
+                                {album.发行日期}
+                            </div>
+                        </div>
+                        {/* Removed icon as requested */}
+                    </div>
+                    
+                    <div className="p-3">
+                        <div className="space-y-1">
+                            {displayedSongs.map((song, idx) => (
+                                <div 
+                                    key={idx} 
+                                    className="flex items-center text-sm p-2 rounded hover:bg-white/60 dark:hover:bg-black/30 transition-colors cursor-pointer group/song"
+                                    onClick={() => onSongClick(song)}
+                                >
+                                    <span className="text-gray-500 dark:text-gray-500 w-6 font-mono text-xs flex-shrink-0">{song.歌曲序号}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-gray-800 dark:text-gray-200 truncate group-hover/song:text-pink-600 dark:group-hover/song:text-pink-400 transition-colors">{song.歌曲名}</div>
+                                        {song.演唱者 && <div className="text-xs text-gray-500 dark:text-gray-500 truncate">{song.演唱者}</div>}
+                                    </div>
+                                    <div className="flex items-center text-gray-400 dark:text-gray-500 flex-shrink-0 group-hover/song:text-pink-500 dark:group-hover/song:text-pink-400">
+                                        <span className="text-[10px] mr-1 opacity-0 group-hover/song:opacity-100 transition-opacity">查看歌词</span>
+                                        <Mic2 className="w-3.5 h-3.5" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {hasMore && (
+                            <button 
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="w-full mt-2 py-1.5 text-xs text-gray-600 hover:text-pink-600 dark:text-gray-400 dark:hover:text-pink-400 transition-colors flex items-center justify-center border-t border-black/5 dark:border-white/5"
+                            >
+                                {isExpanded ? '收起' : `查看全部 ${album.songs.length} 首`}
+                                <ChevronDown className={`w-3 h-3 ml-1 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const LyricModal = ({ song, onClose }) => {
+            if (!song) return null;
+            const [lyrics, setLyrics] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(false);
+            const [fullUrl, setFullUrl] = useState('');
+
+            useEffect(() => {
+                const fetchLyric = (url) => {
+                    fetch(url)
+                        .then(res => {
+                            if (!res.ok) throw new Error("Lyrics not found");
+                            return res.text();
+                        })
+                        .then(text => {
+                            setLyrics(text);
+                            setLoading(false);
+                        })
+                        .catch(err => {
+                            console.error("Failed to load lyrics from:", url, err);
+                            // 如果标准路径失败，尝试降级到根目录 (Fallback)
+                            // 仅当 URL 是标准结构且不是 lrcPath 强制指定的才尝试 fallback
+                            // 但为了简单，这里如果第一次尝试失败，我们尝试一下根目录匹配
+                            if (!url.endsWith(`/${encodeURIComponent(song.歌曲名)}.lrc`)) {
+                                 const fallbackUrl = `${DATA_URLS.lyrics}${encodeURIComponent(song.歌曲名)}.lrc`;
+                                 if (url !== fallbackUrl) {
+                                     // Prevent infinite loop if URL is already fallback
+                                     // Try fallback
+                                     fetch(fallbackUrl)
+                                        .then(res => {
+                                            if(!res.ok) throw new Error("Fallback failed");
+                                            return res.text();
+                                        })
+                                        .then(text => {
+                                            setLyrics(text);
+                                            setLoading(false);
+                                        })
+                                        .catch(() => {
+                                            // Both failed
+                                            setError(true);
+                                            setLoading(false);
+                                        });
+                                     return;
+                                 }
+                            }
+                            
+                            setError(true);
+                            setLoading(false);
+                        });
+                };
+
+                setLoading(true);
+                setError(false);
+                setLyrics(null);
+                
+                // 1. 优先使用 JSON 中明确指定的 lrcPath
+                if (song.lrcPath) {
+                    const url = `${DATA_URLS.lyrics}${song.lrcPath.split('/').map(encodeURIComponent).join('/')}`;
+                    setFullUrl(url);
+                    fetchLyric(url);
+                    return;
+                }
+
+                // 2. 尝试根据用户提供的目录结构自动构建路径
+                // 结构: 分团/类型+序号 专辑/分团 - 歌曲名.lrc
+                if (song.分团 && song.类型 && song.专辑序号 && song.专辑) {
+                    const folderName = `${song.类型}${song.专辑序号} ${song.专辑}`;
+                    const fileName = `${song.分团} - ${song.歌曲名}.lrc`; 
+                    
+                    const path = `${encodeURIComponent(song.分团)}/${encodeURIComponent(folderName)}/${encodeURIComponent(fileName)}`;
+                    const url = `${DATA_URLS.lyrics}${path}`;
+                    
+                    setFullUrl(url);
+                    fetchLyric(url);
+                    return;
+                }
+
+                // 3. 默认兜底: 根目录下的 歌曲名.lrc
+                const url = `${DATA_URLS.lyrics}${encodeURIComponent(song.歌曲名)}.lrc`;
+                setFullUrl(url);
+                fetchLyric(url);
+
+            }, [song]);
+
+            const parsedLyrics = useMemo(() => {
+                if (!lyrics) return [];
+                return lyrics.split('\n')
+                    // 过滤元数据行：以 [ti:, [ar:, [al: 等开头的行
+                    .filter(line => !/^\[(ti|ar|al|offset|tool|by|length):/.test(line.trim()))
+                    .map(line => {
+                        // 移除时间标签
+                        return line.replace(/\[\d{2}:\d{2}(\.\d{2,3})?\]/g, '').trim();
+                    })
+                    // 过滤空行
+                    .filter(line => line);
+            }, [lyrics]);
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm animate-backdrop" onClick={onClose}>
+                    <div 
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col transform transition-all scale-100 dark:bg-gray-900 dark:border dark:border-gray-800 animate-modal" 
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-white sticky top-0 z-10 dark:bg-gray-900 dark:border-gray-800">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{song.歌曲名}</h3>
+                                {song.演唱者 && <p className="text-xs text-gray-500 dark:text-gray-400">{song.演唱者}</p>}
+                            </div>
+                            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500 dark:text-gray-400 dark:hover:bg-gray-800"><X className="w-5 h-5" /></button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar text-center">
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center h-40">
+                                    <Loader2 className="w-8 h-8 text-pink-500 animate-spin mb-2" />
+                                    <p className="text-gray-500 text-sm">正在加载歌词...</p>
+                                </div>
+                            ) : error ? (
+                                <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+                                    <FileText className="w-12 h-12 mb-2 opacity-50" />
+                                    <p>暂无歌词</p>
+                                    <p className="text-xs mt-2 text-gray-500 max-w-xs break-all">尝试路径: {fullUrl.split('/').pop()}</p>
+                                    <a href="https://github.com/yk1z/SNH48-Group-Lyrics" target="_blank" rel="noopener noreferrer" className="mt-4 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center">
+                                        去仓库看看 <ExternalLink className="w-3 h-3 ml-1" />
+                                    </a>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                                    {parsedLyrics.length > 0 ? parsedLyrics.map((line, idx) => (
+                                        <p key={idx} className="min-h-[1.5em]">{line}</p>
+                                    )) : (
+                                        <p className="text-gray-400 italic">纯音乐或无歌词文本</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="p-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-center">
+                            <a href="https://github.com/yk1z/SNH48-Group-Lyrics" target="_blank" rel="noopener noreferrer" className="text-xs text-pink-500 hover:underline flex items-center justify-center">
+                                <span className="mr-1">歌词来源: SNH48-Group-Lyrics</span>
+                                <ChevronRight className="w-3 h-3" />
+                            </a>
+                        </div>
+                    </div>
                 </div>
             );
         };
@@ -489,6 +727,7 @@
             const [members, setMembers] = useState(DEMO_DATA);
             const [zxData, setZxData] = useState([]); 
             const [stagesData, setStagesData] = useState([]);
+            const [fxzpData, setFxzpData] = useState([]); // Albums data
             const [searchTerm, setSearchTerm] = useState('');
             const [selectedGroup, setSelectedGroup] = useState('ALL');
             
@@ -506,6 +745,13 @@
             const [stageSearch, setStageSearch] = useState('');
             const [stageGroupFilter, setStageGroupFilter] = useState('ALL');
             const [stageTeamFilter, setStageTeamFilter] = useState('ALL');
+
+            // Album States
+            const [albumSearch, setAlbumSearch] = useState('');
+            const [albumGroupFilter, setAlbumGroupFilter] = useState('ALL');
+            const [albumTypeFilter, setAlbumTypeFilter] = useState('ALL');
+            const [fxzpError, setFxzpError] = useState(null);
+            const [currentLyricSong, setCurrentLyricSong] = useState(null);
 
             const [isDarkMode, setIsDarkMode] = useState(() => {
                 if (typeof window !== 'undefined') {
@@ -531,7 +777,7 @@
             };
 
             useEffect(() => {
-                fetch('https://yk1z.github.io/members.json')
+                fetch(DATA_URLS.members)
                     .then(res => res.json())
                     .then(data => {
                         const membersData = Array.isArray(data) ? data : (data.roomId || []);
@@ -544,7 +790,7 @@
             }, []);
 
             useEffect(() => {
-                fetch('https://yk1z.github.io/zx.json')
+                fetch(DATA_URLS.zx)
                     .then(res => res.json())
                     .then(data => {
                         if (Array.isArray(data)) {
@@ -560,7 +806,7 @@
             }, []);
 
             useEffect(() => {
-                fetch('https://yk1z.github.io/stages.json')
+                fetch(DATA_URLS.stages)
                     .then(res => res.json())
                     .then(data => {
                         if (Array.isArray(data)) {
@@ -568,6 +814,23 @@
                         }
                     })
                     .catch(err => console.error("Failed to fetch stages data:", err));
+            }, []);
+
+            useEffect(() => {
+                fetch(DATA_URLS.fxzp)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            setFxzpData(data);
+                            setFxzpError(null);
+                        } else {
+                            throw new Error("Data is not an array");
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Failed to fetch albums data:", err);
+                        setFxzpError(err.message);
+                    });
             }, []);
 
             // Helper to parse dates from stage data strings like "2013年8月30日－12月15日"
@@ -582,6 +845,15 @@
                     return new Date(year, month, day).getTime();
                 }
                 return 0;
+            };
+
+            const parseAlbumDate = (dateStr) => {
+                 if (!dateStr) return 0;
+                 const match = dateStr.match(/(\d{4})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/);
+                 if (match) {
+                     return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3])).getTime();
+                 }
+                 return 0;
             };
 
             const groupOptions = useMemo(() => {
@@ -618,6 +890,35 @@
                 const uniqueTeams = [...new Set(filteredStages.map(s => s.队伍).filter(Boolean))];
                 return [{ value: 'ALL', label: '所有队伍' }, ...uniqueTeams.map(t => ({ value: t, label: t }))];
             }, [stagesData, stageGroupFilter]);
+
+             // Album Filters
+            const albumGroupOptions = useMemo(() => {
+                const uniqueGroups = [...new Set(fxzpData.map(a => a.分团).filter(Boolean))];
+                // User defined order
+                const customOrder = ['SNH48', 'GNZ48', 'BEJ48', 'CKG48', 'SHY48', '7SENSES', 'DEMOON', 'BLUEV'];
+                
+                const sortedGroups = uniqueGroups.sort((a, b) => {
+                   const indexA = customOrder.indexOf(a);
+                   const indexB = customOrder.indexOf(b);
+                   
+                   // Both in custom order
+                   if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                   // Only A in custom order (A comes first)
+                   if (indexA !== -1) return -1;
+                   // Only B in custom order (B comes first)
+                   if (indexB !== -1) return 1;
+                   // Neither, alphabetical
+                   return a.localeCompare(b);
+                });
+
+                return [{ value: 'ALL', label: '所有分团' }, ...sortedGroups.map(g => ({ value: g, label: g }))];
+            }, [fxzpData]);
+
+            const albumTypeOptions = useMemo(() => {
+                const uniqueTypes = [...new Set(fxzpData.map(a => a.类型).filter(Boolean))];
+                return [{ value: 'ALL', label: '所有类型' }, ...uniqueTypes.sort().map(t => ({ value: t, label: t }))];
+            }, [fxzpData]);
+
 
             const stats = useMemo(() => {
                 const total = members.length;
@@ -757,6 +1058,39 @@
                 });
             }, [stagesData, stageSearch, stageGroupFilter, stageTeamFilter]);
 
+            // Albums processing logic
+            const processedAlbums = useMemo(() => {
+                // First filter flat list
+                const filtered = fxzpData.filter(item => {
+                    const matchesSearch = (item.专辑 || item.歌曲名)?.toLowerCase().includes(albumSearch.toLowerCase());
+                    const matchesGroup = albumGroupFilter === 'ALL' || item.分团 === albumGroupFilter;
+                    const matchesType = albumTypeFilter === 'ALL' || item.类型 === albumTypeFilter;
+                    return matchesSearch && matchesGroup && matchesType;
+                });
+
+                // Then group by album
+                const albumGroups = {};
+                filtered.forEach(item => {
+                    const key = `${item.分团}-${item.类型}-${item.专辑序号}-${item.专辑}`;
+                    if (!albumGroups[key]) {
+                        albumGroups[key] = {
+                            分团: item.分团,
+                            类型: item.类型,
+                            专辑序号: item.专辑序号,
+                            专辑名: item.专辑,
+                            发行日期: item.发行日期,
+                            songs: []
+                        };
+                    }
+                    albumGroups[key].songs.push(item);
+                });
+
+                // Convert to array and sort by date ascending (oldest first)
+                return Object.values(albumGroups).sort((a, b) => {
+                     return parseAlbumDate(a.发行日期) - parseAlbumDate(b.发行日期);
+                });
+            }, [fxzpData, albumSearch, albumGroupFilter, albumTypeFilter]);
+
             return (
                 <div className="min-h-screen bg-gray-50 font-sans text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100 flex flex-col">
                     <header className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm transition-colors duration-300 dark:bg-gray-900 dark:border-gray-800">
@@ -811,6 +1145,19 @@
                                     <div className="flex items-center gap-2">
                                         <Music className="w-4 h-4" />
                                         公演数据
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('albums')}
+                                    className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
+                                        activeTab === 'albums'
+                                            ? 'border-pink-500 text-pink-600 dark:text-pink-400'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Disc className="w-4 h-4" />
+                                        发行作品
                                     </div>
                                 </button>
                             </div>
@@ -1024,6 +1371,63 @@
                             </div>
                         )}
 
+                         {/* VIEW: ALBUMS */}
+                        {activeTab === 'albums' && (
+                            <div className="animate-fadeIn">
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 space-y-4 transition-colors duration-300 dark:bg-gray-900 dark:border-gray-800">
+                                    <div className="flex flex-col lg:flex-row gap-4">
+                                        <div className="flex-1 relative group">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                                                <Search className="h-5 w-5 text-gray-400 group-focus-within:text-pink-500 transition-colors duration-300 dark:text-gray-500" />
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder="搜索专辑或歌曲..."
+                                                className="w-full pl-10 pr-4 py-3 bg-gray-100 border-transparent text-gray-900 rounded-full focus:bg-white focus:ring-2 focus:ring-pink-300 focus:border-transparent focus:shadow-md outline-none transition-all duration-300 ease-in-out placeholder-gray-500 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:bg-gray-750 dark:focus:ring-pink-500"
+                                                value={albumSearch}
+                                                onChange={(e) => setAlbumSearch(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                            <CustomSelect 
+                                                options={albumGroupOptions} 
+                                                value={albumGroupFilter} 
+                                                onChange={setAlbumGroupFilter} 
+                                            />
+                                            <CustomSelect 
+                                                options={albumTypeOptions} 
+                                                value={albumTypeFilter} 
+                                                onChange={setAlbumTypeFilter} 
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    {fxzpError && (
+                                        <div className="flex items-center p-4 mb-4 text-sm text-red-800 border border-red-300 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 dark:border-red-800">
+                                            <AlertCircle className="flex-shrink-0 inline w-4 h-4 mr-3" />
+                                            <div>
+                                                <span className="font-medium">数据加载失败!</span> {fxzpError}. 请检查 JSON 文件格式。
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {processedAlbums.length > 0 ? (
+                                        processedAlbums.map((album, index) => (
+                                            <AlbumCard key={index} album={album} onSongClick={setCurrentLyricSong} />
+                                        ))
+                                    ) : (
+                                        <div className="col-span-full text-center py-20 bg-white rounded-xl border border-dashed border-gray-300 dark:bg-gray-800 dark:border-gray-700">
+                                            <Disc className="w-12 h-12 text-gray-300 mx-auto mb-4 dark:text-gray-600" />
+                                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-200">无相关作品</h3>
+                                            <p className="text-gray-500 mt-1 dark:text-gray-400">请尝试搜索其他关键词或调整筛选</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                     </main>
                     
                     <footer className="bg-white border-t border-gray-200 py-6 mt-12 dark:bg-gray-900 dark:border-gray-800">
@@ -1035,6 +1439,12 @@
                     <MemberDetailModal 
                         member={selectedMember} 
                         onClose={() => setSelectedMember(null)} 
+                    />
+
+                    {/* Lyric Modal */}
+                    <LyricModal 
+                        song={currentLyricSong} 
+                        onClose={() => setCurrentLyricSong(null)} 
                     />
                 </div>
             );
